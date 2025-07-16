@@ -1,16 +1,16 @@
 const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { sendMail } = require("../config/nodeMailer");
 
 const generateOtp = function () {
-  return Math.floor(10000 + Math.random).toString();
+  return Math.floor(100000 + Math.random() * 90000).toString();
 };
 
 //* To register a user
 exports.register = async function (req, res) {
   // Extracting name, email, and password from request body
   const { name, email, password } = req.body;
-  console.log(name, email, password);
 
   //  If any of the required fields is missing, return an error
   if (!name || !email || !password) {
@@ -54,6 +54,8 @@ exports.register = async function (req, res) {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
+
+    await sendMail(user.email, "Greetings from Pikaabee", `Your account has been created with ${user.email}`);
 
     // Send success response
     res.status(200).json({
@@ -144,3 +146,95 @@ exports.logout = async function (req, res) {
     });
   }
 };
+
+// Send Verificvation OTP to the user's Email
+exports.sendVerifyOtp = async function (req, res) {
+  const { userId } = req.body;
+
+  try {
+    const user = await userModel.findById(userId);
+
+    if (user.isAccountVerified) {
+      res.status(400).json({
+        success: false,
+        message: "Email already verified",
+      });
+    }
+
+    const otp = generateOtp();
+
+    user.verifyOtp = otp;
+    user.verifyOtpExpireAt = Date.now() + 24 * 60 * 60 * 1000;
+
+    sendMail(user.email, "Account Verification OTP", `Your OTP is ${otp}, Verify you account using this OTP.`);
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Verification OTP sent email successfully",
+    });
+  } catch (error) {
+    console.error(`SendVerifyOtp Err: ${error}`);
+
+    return res.status(500).json({
+      success: false,
+      message: `SendVerifyOtp Err: ${error}`,
+    });
+  }
+};
+
+exports.verifyEmail = async function (req, res) {
+  const { email, otp } = req.body;
+
+  if ((!email, !otp)) {
+    return res.status(400).json({
+      success: true,
+      message: "All the fields required",
+    });
+  }
+
+  try {
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        success: true,
+        message: "User notfound",
+      });
+    }
+
+    if (user.verifyOtp !== otp || user.verifyOtp === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect OTP, Please check",
+      });
+    }
+
+    if (user.verifyOtpExpireAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired",
+      });
+    }
+
+    user.isAccountVerified = true;
+    user.verifyOtp = "";
+    user.verifyOtpExpireAt = 0;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    console.error(`VerifyEmail Err: ${error}`);
+
+    return res.status(500).json({
+      success: false,
+      message: `VerifyEmail Err: ${error}`,
+    });
+  }
+};
+ 
