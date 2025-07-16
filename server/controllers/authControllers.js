@@ -50,8 +50,10 @@ exports.register = async function (req, res) {
     // Send JWT token as a cookie to the client
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? false : true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      //   secure: process.env.NODE_ENV === "production" ? false : true,
+      secure: false,
+      //   sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      sameSite: "Lax",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
@@ -106,8 +108,10 @@ exports.login = async function (req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? false : true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      //   secure: process.env.NODE_ENV === "production" ? false : true,
+      secure: false,
+      //   sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      sameSite: "Lax",
       maxAge: 1 * 24 * 60 * 60 * 1000,
     });
 
@@ -237,4 +241,3 @@ exports.verifyEmail = async function (req, res) {
     });
   }
 };
- 
