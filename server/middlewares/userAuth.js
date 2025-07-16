@@ -14,7 +14,8 @@ exports.userAuth = async function (req, res, next) {
     console.log("tokenDecode:", tokenDecode);
 
     if (tokenDecode.userId) {
-      req.body.userId = tokenDecode.userId;
+      req.userId = tokenDecode.userId;
+      next();
     } else {
       return res.status(400).json({
         success: false,
@@ -27,5 +28,4 @@ exports.userAuth = async function (req, res, next) {
       message: `UserAuth Err: ${error}`,
     });
   }
-  next();
 };
