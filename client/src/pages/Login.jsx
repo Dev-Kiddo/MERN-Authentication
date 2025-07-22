@@ -17,7 +17,7 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const { backendUrl, setIsLoggedIn } = useContext(AppContext);
+  const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext);
 
   const handleChange = function (e) {
     e.preventDefault();
@@ -41,7 +41,7 @@ const Login = () => {
       console.log("response:", response);
 
       toast.success(response.data.message, {
-        position: "top-right",
+        position: "top-left",
         autoClose: 2000,
         hideProgressBar: false,
         closeOnClick: true,
@@ -59,13 +59,15 @@ const Login = () => {
       } else {
         formData.email = "";
         formData.password = "";
+        await getUserData();
+
         setIsLoggedIn((isLoggedIn) => !isLoggedIn);
         navigate("/");
       }
     } catch (error) {
       console.log(error);
       toast.error(error.message, {
-        position: "top-right",
+        position: "top-left",
         autoClose: 2000,
         hideProgressBar: false,
         closeOnClick: true,

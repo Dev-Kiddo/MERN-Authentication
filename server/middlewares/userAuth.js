@@ -4,7 +4,7 @@ exports.userAuth = async function (req, res, next) {
   const { token } = req.cookies;
 
   if (!token) {
-    return res.status(400).josn({
+    return res.status(400).json({
       success: false,
       message: "Not authorized, Login again",
     });
